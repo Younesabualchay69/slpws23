@@ -10,6 +10,14 @@ enable :sessions
 
 
 get('/') do
+    redirect('/products')
+end
+
+get('/products') do
+    slim(:"products/index")
+end    
+
+get('/register') do
     slim(:register)
 end
 
@@ -38,7 +46,16 @@ post('/login') do
     end
 
 end
+
+get("/todos") do
+    id = session[:id].to_i
+    db = SQLite3::Database.new('db/data.db')
+    db.results_as_hash = true 
+    result = db.execute("SELECT * FROM todos WHERE user_id = ?", id)
+    p "alla todos från result #{result}"
+    slim(:"todos/index",locals:{todos:result})
   
+  end
 
 post('/users/new') do
 
