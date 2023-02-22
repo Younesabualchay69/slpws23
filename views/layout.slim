@@ -6,16 +6,17 @@ html lang="en"
     link rel="stylesheet" href="/css/style.css"/
     title Document
   body
-    nav
-      a href="/register" Register
-    
-      a href="/" Register
-
-      a href="/" Register
-
-      a href="/" Register
+    nav 
+      - if user == nil 
+        a href="/register" Register
+        a href="/showlogin" Login
+        a href="/" hem
       
-      a href="/showlogin" Login
+      - else 
+        a href="logout" logut
+        a href="/" hem
+      
+
     h1 Välkommen till Café Ahmed!
     h2 Skapa ett konto nedan:
 

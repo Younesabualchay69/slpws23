@@ -7,23 +7,36 @@ require 'sinatra/reloader'
 
 enable :sessions
 
+def grab_db()
+    db = SQLite3::Database.new("db/data.db")
+    db.results_as_hash = true
+    return db
+end
 
+def getAnv()
+    if session[:id] == nil then
+        return nil
+    end
+    uid = session[:id].to_i
+    db = grab_db()
+    return db.execute("SELECT * FROM users WHERE id = ?", uid).first
+end
 
 get('/') do
     redirect('/products')
 end
 
 get('/products') do
-    slim(:"products/index")
+    slim(:"products/index", locals:{user:getAnv()})
 end    
 
 get('/register') do
-    slim(:register)
+    slim(:register, locals:{user:getAnv()})
 end
 
 
 get('/showlogin') do
-    slim(:login)
+    slim(:login, locals:{user:getAnv()})
 end
   
   
@@ -40,12 +53,18 @@ post('/login') do
     if BCrypt::Password.new(pwdigest) == password
         session[:id] = id
 
-        redirect('/todos')
+        redirect('/')
     else 
         "fel lösen!"
     end
 
 end
+
+get('/logout') do
+    session[:id] = nil
+    redirect('/')
+end
+  
 
 get("/todos") do
     id = session[:id].to_i
@@ -74,4 +93,4 @@ post('/users/new') do
     
     end
   
-  end
+end
