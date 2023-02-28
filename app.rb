@@ -19,7 +19,7 @@ def getAnv()
     end
     uid = session[:id].to_i
     db = grab_db()
-    return db.execute("SELECT * FROM users WHERE id = ?", uid).first
+    return db.execute("SELECT * FROM users WHERE id = ?", uid).first  #Hämtar data för den inloggade personen
 end
 
 get('/') do
@@ -28,12 +28,17 @@ end
 
 get('/products') do
     slim(:"products/index", locals:{user:getAnv()})
-end    
+end  
 
+get('/profile') do 
+
+    slim(:profile, locals:{user:getAnv()})
+
+end
+  
 get('/register') do
     slim(:register, locals:{user:getAnv()})
 end
-
 
 get('/showlogin') do
     slim(:login, locals:{user:getAnv()})
@@ -64,17 +69,6 @@ get('/logout') do
     session[:id] = nil
     redirect('/')
 end
-  
-
-get("/todos") do
-    id = session[:id].to_i
-    db = SQLite3::Database.new('db/data.db')
-    db.results_as_hash = true 
-    result = db.execute("SELECT * FROM todos WHERE user_id = ?", id)
-    p "alla todos från result #{result}"
-    slim(:"todos/index",locals:{todos:result})
-  
-  end
 
 post('/users/new') do
 
@@ -94,3 +88,4 @@ post('/users/new') do
     end
   
 end
+

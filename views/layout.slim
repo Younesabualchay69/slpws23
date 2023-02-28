@@ -3,21 +3,24 @@ html lang="en"
   head
     meta charset="UTF-8"/
     meta name="viewport" content="width=device-width, initial-scale=1.0"/
-    link rel="stylesheet" href="/css/style.css"/
     title Document
-  body
-    nav 
-      - if user == nil 
-        a href="/register" Register
-        a href="/showlogin" Login
-        a href="/" hem
-      
-      - else 
-        a href="logout" logut
-        a href="/" hem
-      
 
+  body  
     h1 Välkommen till Café Ahmed!
     h2 Skapa ett konto nedan:
+    nav 
+      - if user == nil 
+        a href="/register" Register         
+        a href="/showlogin" Login           
+        a href="/" hem        
+      
+      - else 
+        a href="logout"  logut   
+        a href="profile"  Profile    
+        a href="/"  hem   
+
+    
+
+   
 
     == yield
