@@ -27,7 +27,25 @@ get('/') do
 end
 
 get('/products') do
-    slim(:"products/index", locals:{user:getAnv()})
+    db = grab_db()
+    products = db.execute("SELECT * FROM products")
+    slim(:"products/index", locals:{user:getAnv(), products:products})
+    
+end  
+
+get('/products/:id') do
+
+id = params[:id]
+db = grab_db()
+product = db.execute("SELECT * FROM products WHERE id = ?",id.to_i).first
+slim(:"products/show", locals:{user:getAnv(), product:product})
+end
+
+
+
+
+get('/cart') do
+    slim(:"cart/index", locals:{user:getAnv()})
 end  
 
 get('/profile') do 

@@ -3,6 +3,13 @@ img style="height:500px" src="../img/_MG_0137.jpg" alt="pic"
 
     - if user
         h1 Våra produkter
+
+        - for product in products do 
+            p #{product["name"]}
+            p #{product["id"]} 
+            a href="/products/#{product["id"]}"  view product
+
+
         img style="width:200px" src="../img/img1.jpg" alt="pic"
         img style="width:200px;height:200px" src="../img/img2.jpg" alt="pic"
         img style="width:200px;height:200px" src="../img/img3.jpg" alt="pic"
@@ -10,5 +17,3 @@ img style="height:500px" src="../img/_MG_0137.jpg" alt="pic"
     
 
 
-      
-      
