@@ -66,6 +66,15 @@ post("/cart") do
     redirect('/products')
 end
 
+post("/cart/delete") do
+    usr_id = session[:id].to_i
+    db = grab_db()
+    result = db.execute("DELETE FROM cart WHERE user_id=?", usr_id)
+    redirect '/cart'
+  end
+  
+
+
 get('/profile') do 
 
     slim(:profile, locals:{user:getAnv()})
@@ -124,4 +133,6 @@ post('/users/new') do
     end
   
 end
+
+
 
