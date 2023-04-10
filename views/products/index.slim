@@ -3,13 +3,13 @@ img style="height:500px" src="../img/_MG_0137.jpg" alt="pic"
 
     - if user
         h1 Våra produkter
-
+        a style="margin:300px;font-size:XX-large" href="/products/new" Ny produkt
         - for product in products do 
             p #{product["name"]}
             p #{product["id"]}
-            a href="/products/#{product["id"]}"  view product
+            a style="margin:200px;font-size:X-large" href="/products/#{product["id"]}"  view product
             form action="/cart" method="post"
-                input type="number" value="#{product["id"]}" name="product_id" hidden="true"
+                input type="number" value="#{product["id"]}" name="product_id" hidden="true" 
                 input type="submit" value="add to cart"
             p ###################
 

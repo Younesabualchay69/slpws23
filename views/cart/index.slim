@@ -1,9 +1,16 @@
 
     - if user
         h1 hello #{user["username"]} this yo shopping cart wagwan
-        h1 #{cart["product_id"]}
+        ul 
+            - for item in cart do 
+                li
+                    h1 #{item["items"]}st #{item["product_id"]}
 
-        <form action="/cart/delete" method="post">
-        <input type="hidden" name="prod_id">
-        <input type="submit" value="Delete">
+                    form action="/cart/delete" method="post"
+                        input type="hidden" name="prod_id" value="#{item['product_id']}"
+                        input type="submit" value="Delete"
+                    
+        form action="/cart/purchase" method="get"
+            input type="submit" value="Köp"
+                     
 

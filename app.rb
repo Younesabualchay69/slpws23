@@ -34,21 +34,52 @@ get('/products') do
 end  
 
 get('/products/:id') do
-
 id = params[:id]
 db = grab_db()
 product = db.execute("SELECT * FROM products WHERE id = ?",id.to_i).first
 slim(:"products/show", locals:{user:getAnv(), product:product})
 end
 
+get('/products/:id/edit') do
+    id = params[:id].to_i
+    db = grab_db()
+    product = db.execute("SELECT * FROM products WHERE id = ?",id).first
+    slim(:"/products/edit",locals:{user:getAnv(), product:product})
+  
+  end
 
+post('/products/:id/update') do
+
+    id = params[:id]
+    db = grab_db()
+    product = db.execute("SELECT * FROM products WHERE id = ?",id.to_i).first
+   # is_admin = db.execute("SELECT * FROM users WHERE is_admin = 1",id.to_i).first
+    name = params[:name]
+    db.execute("UPDATE products SET name=? WHERE id = ?",name,id)
+    slim(:"products/show", locals:{user:getAnv(), product:product})
+    redirect('/products/:id')
+end
+
+get('/products/new') do
+    slim(:"products/new", locals:{user:getAnv()})
+end
+  
+post('/products/new') do
+    db = grab_db()
+    name = params[:name]
+    id = params[:id].to_i
+    p "vi fick ut datan #{name} och #{id}"
+
+    db.execute("INSERT INTO products (name) VALUES ('?')",name)
+    redirect('/products')
+  
+  end
 
 
 get('/cart') do
     usr = getAnv()
     db = grab_db()
     cart = db.execute("SELECT * FROM cart WHERE user_id=?", usr["id"])
-
     slim(:"cart/index", locals:{user:getAnv(), cart:cart})
 end  
 
@@ -68,16 +99,44 @@ end
 
 post("/cart/delete") do
     usr_id = session[:id].to_i
+    prod_id = params["prod_id"]
     db = grab_db()
-    result = db.execute("DELETE FROM cart WHERE user_id=?", usr_id)
+    result = db.execute("SELECT items FROM cart WHERE user_id=? AND product_id=?", usr_id, prod_id).first
+    if result["items"].to_i > 1 then
+        db.execute("UPDATE cart SET items=? WHERE user_id=? AND product_id=?", result["items"].to_i - 1, usr_id, prod_id)
+    else        
+        result = db.execute("DELETE FROM cart WHERE user_id=? AND product_id=?", usr_id, prod_id)
+    end
     redirect '/cart'
   end
   
+get('/cart/purchase') do 
+    db = grab_db()   
+    usr = getAnv()
+    cart = db.execute("SELECT * FROM cart WHERE user_id=?", usr["id"])
+ 
+    slim(:"cart/purchase", locals:{user:getAnv(), cart:cart})
+end
+
+post('/cart/purchase') do
+    "Hello World"
+
+    #db = grab_db()
+    #name = params[:name]
+   # id = params[:id].to_i
+  #  p "vi fick ut datan #{name} och #{id}"
+
+   # db.execute("INSERT INTO products (name) VALUES ('?')",name)
+
+end
 
 
 get('/profile') do 
+    usr_id = session[:id].to_i
+    prod_id = params["prod_id"]
+    reciept = db.execute("SELECT * FROM reciept WHERE user_id=?", usr["id"])
+    slim(:"profile/index", locals:{user:getAnv(), profile:reciept})
 
-    slim(:profile, locals:{user:getAnv()})
 
 end
   
@@ -112,6 +171,7 @@ end
 
 get('/logout') do
     session[:id] = nil
+
     redirect('/')
 end
 
@@ -119,7 +179,9 @@ post('/users/new') do
 
     username = params[:username]
     password = params[:password]
-    password_confirm = params[:password_confirm]
+    password_confirm = params[:password_confirm] 
+
+
   
     if password == password_confirm
       #lägg till användare
