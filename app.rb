@@ -132,9 +132,10 @@ end
 
 
 get('/profile') do 
+    db = grab_db()
     usr_id = session[:id].to_i
     prod_id = params["prod_id"]
-    reciept = db.execute("SELECT * FROM reciept WHERE user_id=?", usr["id"])
+    reciept = db.execute("SELECT * FROM order_products WHERE order_id=?", usr_id)
     slim(:"profile/index", locals:{user:getAnv(), profile:reciept})
 
 
