@@ -3,7 +3,8 @@ img style="height:500px" src="../img/_MG_0137.jpg" alt="pic"
 
     - if user
         h1 Våra produkter
-        a style="margin:300px;font-size:XX-large" href="/products/new" Ny produkt
+        - if admin
+            a style="margin:300px;font-size:XX-large" href="/products/new" Ny produkt
         - for product in products do 
             p #{product["name"]}
             p #{product["id"]}

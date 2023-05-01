@@ -1,4 +1,9 @@
-p = product["name"]
 
-a href="/products/#{product['id']}/edit" Uppdatera
+
+a style="margin:120px;font-size:XXX-large" #{product["name"]}
+
+img style="margin:80px;width:200px;height:200px" src="../img/img3.jpg" alt="pic"
+
+    -if admin 
+        a style="margin:120px;font-size:XXX-large" href="/products/#{product['id']}/edit" Uppdatera
        

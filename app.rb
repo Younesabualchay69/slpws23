@@ -22,6 +22,17 @@ def getAnv()
     return db.execute("SELECT * FROM users WHERE id = ?", uid).first  #Hämtar data för den inloggade personen
 end
 
+def admin()
+    if session[:id]
+        db = grab_db()
+        uid = session[:id].to_i
+        return db.execute("SELECT is_admin FROM users WHERE id = ?", uid).first["is_admin"] == 1
+    end
+    return false
+end  
+
+
+
 get('/') do
     redirect('/products')
 end
@@ -29,7 +40,7 @@ end
 get('/products') do
     db = grab_db()
     products = db.execute("SELECT * FROM products")
-    slim(:"products/index", locals:{user:getAnv(), products:products})
+    slim(:"products/index", locals:{user:getAnv(),admin:admin(), products:products})
     
 end  
 
@@ -40,13 +51,28 @@ product = db.execute("SELECT * FROM products WHERE id = ?",id.to_i).first
 slim(:"products/show", locals:{user:getAnv(), product:product})
 end
 
+get('/not_admin') do
+    return "Wallah på gud mannen du får inte vara i mina områden"
+end
+
+# match all routes that starts with products, has an id, and ends with something, ex: /products/34/edit
+before('/products/*/*') do
+    if !admin() then
+        redirect("/not_admin")
+    end
+end
+before('/products/new') do
+    if !admin() then
+        redirect("/not_admin")
+    end
+end
+
 get('/products/:id/edit') do
     id = params[:id].to_i
     db = grab_db()
     product = db.execute("SELECT * FROM products WHERE id = ?",id).first
-    slim(:"/products/edit",locals:{user:getAnv(), product:product})
-  
-  end
+    return slim(:"/products/edit",locals:{user:getAnv(), product:product})
+end
 
 post('/products/:id/update') do
 
@@ -74,7 +100,6 @@ post('/products/new') do
     redirect('/products')
   
   end
-
 
 get('/cart') do
     usr = getAnv()
@@ -114,7 +139,6 @@ get('/cart/purchase') do
     db = grab_db()   
     usr = getAnv()
     cart = db.execute("SELECT * FROM cart WHERE user_id=?", usr["id"])
- 
     slim(:"cart/purchase", locals:{user:getAnv(), cart:cart})
 end
 
@@ -161,6 +185,9 @@ post('/login') do
     id = result["id"]
 
     if BCrypt::Password.new(pwdigest) == password
+        # login success
+
+        # set id parameter from database to session hash
         session[:id] = id
 
         redirect('/')
