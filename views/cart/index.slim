@@ -4,7 +4,7 @@
         ul 
             - for item in cart do 
                 li
-                    h1 #{item["items"]}st #{item["product_id"]}
+                    h1 #{item["items"]}st #{item["product_name"]}
 
                     form action="/cart/delete" method="post"
                         input type="hidden" name="prod_id" value="#{item['product_id']}"

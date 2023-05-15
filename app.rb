@@ -104,7 +104,7 @@ post('/products/new') do
 get('/cart') do
     usr = getAnv()
     db = grab_db()
-    cart = db.execute("SELECT * FROM cart WHERE user_id=?", usr["id"])
+    cart = db.execute("SELECT cart.*,products.name as product_name FROM cart INNER JOIN products ON cart.product_id=products.id WHERE cart.user_id=?", usr["id"])
     slim(:"cart/index", locals:{user:getAnv(), cart:cart})
 end  
 
