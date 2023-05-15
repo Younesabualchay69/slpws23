@@ -39,7 +39,7 @@ end
 
 get('/products') do
     db = grab_db()
-    products = db.execute("SELECT * FROM products")
+    products = db.execute("SELECT products.*,suppliers.name as supplier_name FROM products INNER JOIN suppliers ON products.supplier_id = suppliers.id")
     slim(:"products/index", locals:{user:getAnv(),admin:admin(), products:products})
     
 end  
