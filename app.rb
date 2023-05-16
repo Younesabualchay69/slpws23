@@ -94,9 +94,15 @@ post('/products/new') do
     db = grab_db()
     name = params[:name]
     id = params[:id].to_i
+    sid = params[:sid].to_i
     p "vi fick ut datan #{name} och #{id}"
 
-    db.execute("INSERT INTO products (name) VALUES ('?')",name)
+    s = db.execute("SELECT * FROM suppliers WHERE id=?",sid)
+    if s.length == 0 then
+        return "Supplier finns inte"
+    end
+
+    db.execute("INSERT INTO products (name, supplier_id) VALUES (?,?)",name,sid)
     redirect('/products')
   
   end
