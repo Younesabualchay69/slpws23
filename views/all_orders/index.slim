@@ -1,0 +1,20 @@
+h1 Välj användare
+
+main
+  center
+    table.container
+      tr
+        th
+          p ID
+        th
+          p Namn
+        th
+          p Admin level
+      - users.each do |e|
+        tr id="id#{e['id']}" style="cursor:pointer;" onclick="javascript: window.location.href = '/all_orders/#{e['id']}'"
+          td
+            p = e["id"]
+          td
+            p #{e['username']}
+          td
+            p #{e['admin']}

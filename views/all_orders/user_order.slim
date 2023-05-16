@@ -1,0 +1,42 @@
+h1 Hej #{user["username"]}, här är alla kvitton för #{order_user["username"]}!
+main#orders
+  center
+    - if orders[:notpayed].length == 0 and orders[:payed].length == 0 then
+      h2 #{order_user["username"]} väntas inte betala några produkter!
+    - else
+      - if orders[:notpayed].length > 0 then
+        h2.payment_pending Betalning väntar:
+        span#orders_notpayed.sub_orders
+          - orders[:notpayed].each_value do |order|
+            span.order
+              span.left
+                span.time
+                  h3 #{Time.at(order["date"]).strftime("%d/%m/%Y")}
+                  h3 #{Time.at(order["date"]).strftime("%H:%M")}
+                form.pay method="POST" action="/all_orders/#{order_user["id"]}/#{order["id"]}/delete"
+                  input type="submit" value="Makulera order!"
+              table
+                - order["products"].each do |product|
+                  tr
+                    td.items
+                      h3 #{product[:items]} st
+                    td.name
+                      h3 #{products[product[:id]]["name"]}
+            p ###############################
+      - if orders[:payed].length > 0 then
+        h2.payment_completed #{order_user["username"]} har betalat:
+        span#orders_payed.sub_orders
+          - orders[:payed].each_value do |order|
+            span.order
+              span.left
+                span.time
+                  h3 #{Time.at(order["date"]).strftime("%d/%m/%Y")}
+                  h3 #{Time.at(order["date"]).strftime("%H:%M")}
+              table
+                - order["products"].each do |product|
+                  tr
+                    td.items
+                      h3 #{product[:items]} st
+                    td.name
+                      h3 #{products[product[:id]]["name"]}
+            p ###############################

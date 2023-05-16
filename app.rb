@@ -156,7 +156,7 @@ post('/cart/purchase') do
    
     ret = create_order(usr["id"])
     if ret == -1 then
-        return "Error"
+        return "du måste lägga till varor i din kundkorg!"
     end
     redirect("/orders")
 end
@@ -268,7 +268,39 @@ def get_orders_products_by_ids(ids)
     reciept = db.execute("SELECT * FROM orders_products WHERE order_id=?", usr_id)
     slim(:"profile/index", locals:{user:getAnv(), profile:reciept})
   end
+
+# Kollar admin priviligeer för alla routes som börjar på all_orders
+before("/all_orders*") do
+    if !admin() then
+        # Om användaren inte är admin skickas man till en annan sida som heter /permission_denied
+        redirect("/permission_denied")
+    end
+end
   
+get("/all_orders") do
+    # Hämta alla användare som inte är admins
+    users = grab_db().execute("SELECT * FROM users WHERE is_admin = 0")
+    slim(:"all_orders/index", locals:{user:getAnv(), users:users})
+end
+  
+get("/all_orders/:id") do
+    uid = params[:id]
+    user = grab_db().execute("SELECT * FROM users WHERE id = ?", uid).first
+    orders_and_products = get_orders_struct(uid)
+    slim(:"all_orders/user_order", locals:{user:getAnv(), order_user:user, orders:orders_and_products[:orders], products:orders_and_products[:products]})
+end
+
+get("/permission_denied") do
+    "Här får du inte vara, gå <a href='/'>hem</a>"
+end
+
+post("/all_orders/:uid/:oid/delete") do
+    uid = params[:uid]
+    oid = params[:oid]
+    user = grab_db().execute("DELETE FROM orders WHERE user_id=? AND id=?", uid, oid)
+    redirect("all_orders/#{uid}")
+end
+
 get('/register') do
     slim(:register, locals:{user:getAnv()})
 end
