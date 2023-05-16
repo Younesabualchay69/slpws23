@@ -306,30 +306,57 @@ get('/register') do
 end
 
 get('/showlogin') do
-    slim(:login, locals:{user:getAnv()})
+    state = params["state"]
+    slim(:login, locals:{user:getAnv(), state:state})
 end
   
+max_login_attempts = 3
+cooldown_s = 10
   
 post('/login') do
 
-    username = params[:username]
-    password = params[:password]
-    db = SQLite3::Database.new('db/data.db')
-    db.results_as_hash = true 
-    result = db.execute("SELECT * FROM users WHERE username = ?",username).first
-    pwdigest = result["pwdigest"]
-    id = result["id"]
+    if session["last_login_attempt"] && (Time.now.to_f * 1000).to_i < session["last_login_attempt"] + cooldown_s * 1000 then
+        p "Time left: #{session['last_login_attempt'] + cooldown_s * 1000 - (Time.now.to_f * 1000).to_i}"
+      else
+        session["login_attempts"] = 0
+      end
+    
+      if session["login_attempts"] != nil && session["login_attempts"] < max_login_attempts then
+        session["last_login_attempt"] = (Time.now.to_f * 1000).to_i
+        username = params[:username]
+        password = params[:password]
+        puts("Login attempt for #{username}")
+        
+        loginok = false
+        db = SQLite3::Database.new('db/data.db')
+        db.results_as_hash = true 
+        result = db.execute("SELECT * FROM users WHERE username = ?",username).first
+        pwdigest = result["pwdigest"]
+        id = result["id"]
 
-    if BCrypt::Password.new(pwdigest) == password
-        # login success
+        if BCrypt::Password.new(pwdigest) == password
+            # login success
 
-        # set id parameter from database to session hash
-        session[:id] = id
-
-        redirect('/')
-    else 
-        "fel lösen!"
-    end
+            # set id parameter from database to session hash
+            session[:id] = id
+            loginok = true
+        else 
+            loginok = false
+        end
+        if loginok == true then
+          session["login_attempts"] = 0
+          redirect("/")
+        end
+        if session["login_attempts"] == nil then
+          session["login_attempts"] = 1
+        else
+          session["login_attempts"] += 1
+        end
+        if session["login_attempts"] < max_login_attempts then
+          redirect("/showlogin?state=badlogin")
+        end
+      end
+      redirect("/showlogin?state=cooldown")
 
 end
 

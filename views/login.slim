@@ -3,4 +3,8 @@ h2 logga in!
 form action="login" method="POST"
     input type="text" name="username" placeholder="Enter username" autofocus="true"
     input type="password" name="password" placeholder="Enter password"
-    input type="submit" value="logga in"/
+    input type="submit" value="logga in"
+    - if state == "cooldown" then 
+        p För många försök, försök igen senare 
+    - elsif state == "badlogin" then 
+        p Fel lösenord eller användarnamn, försök igen
