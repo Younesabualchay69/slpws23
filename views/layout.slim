@@ -8,9 +8,10 @@ html lang="en"
 
   body  
     h1 Välkommen till Café Ahmed!
-    h2 Skapa ett konto nedan:
+
     nav 
-      - if user == nil 
+      - if user == nil    
+        h2 Skapa ett konto nedan:
         a style="margin:100px" href="/register" Register         
         a style="margin:100px" href="/showlogin" Login           
         a style="margin:100px" href="/" hem        
@@ -20,6 +21,7 @@ html lang="en"
         a style="margin:100px" href="profile"  Profile    
         a style="margin:100px" href="/" hem   
         a style="margin:100px" href="/cart" SHOPPING CART
+        a style="margin:100px" href="/orders" ORDERS
 
 
     == yield

@@ -135,35 +135,139 @@ post("/cart/delete") do
     redirect '/cart'
   end
   
-get('/cart/purchase') do 
+def create_order(uid)
+    db = grab_db()
+    cart = db.execute("SELECT product_id,items FROM cart WHERE user_id=?", uid);
+    if cart.length > 0 then
+      db.execute("INSERT INTO orders (user_id,date) VALUES (?,?)", uid, Time.now.to_i)
+      order_id = db.last_insert_row_id
+      cart.each do |item|
+        db.execute("INSERT INTO orders_products (order_id, product_id, items) VALUES (?,?,?)", order_id, item["product_id"], item["items"]);
+        db.execute("DELETE FROM cart WHERE user_id=? AND product_id=?", uid, item["product_id"])
+      end
+      return db.last_insert_row_id
+    end
+    return -1
+end
+
+post('/cart/purchase') do 
     db = grab_db()   
     usr = getAnv()
-    cart = db.execute("SELECT * FROM cart WHERE user_id=?", usr["id"])
-    slim(:"cart/purchase", locals:{user:getAnv(), cart:cart})
+   
+    ret = create_order(usr["id"])
+    if ret == -1 then
+        return "Error"
+    end
+    redirect("/orders")
 end
 
-post('/cart/purchase') do
-    "Hello World"
-
-    #db = grab_db()
-    #name = params[:name]
-   # id = params[:id].to_i
-  #  p "vi fick ut datan #{name} och #{id}"
-
-   # db.execute("INSERT INTO products (name) VALUES ('?')",name)
+# Skapa en hash med element i en array, värdet "id" i varje element kommer att representera nyckeln för varje element i hashen medan elementet kommer att representera värdet i hashen
+def by_key(table)
+  hash = {}
+  for row in table do
+    hash[row["id"]] = row
+  end
+  return hash
 
 end
 
+# Hämta alla products som är inkluderade i alla ordrar från en user från database
+#
+# @param [Integer] uid är user's ID
+#
+# @return [Array] en array med matchande products i databasen var och en som en hash
 
-get('/profile') do 
+def get_products_linked_orders(uid)
+    return grab_db().execute("SELECT products.* FROM ((products INNER JOIN orders_products ON products.id=orders_products.product_id) INNER JOIN orders ON orders_products.order_id=orders.id) WHERE orders.user_id=?", uid)
+end
+
+# Få beställningarna märkta som betalda och lägg dem i en hash där varje nyckel är ID för varje beställning
+def bykey_get_orders_payed(uid)
+    return by_key(grab_db().execute("SELECT * FROM orders WHERE user_id=? AND payed=1", uid))
+end
+
+# Få beställningarna markerade som ej betalda och lägg dem i en hash där varje nyckel är ID för varje beställning
+def bykey_get_orders_notpayed(uid)
+    return by_key(grab_db().execute("SELECT * FROM orders WHERE user_id=? AND payed=0", uid))
+  end
+  
+  # Få en array där varje element är en beställning markerad som betald och en produkt kopplad till den, eftersom en beställning kan ha många produkter kan det finnas fler element än beställningar
+  def get_orders_payed_full(uid)
+    return grab_db().execute("SELECT orders.*,orders_products.product_id,orders_products.items FROM orders INNER JOIN orders_products ON orders.id=orders_products.order_id WHERE user_id=? AND payed=1", uid)
+  end
+  
+  # Skaffa en array där varje element är en beställning markerad som ej betald och en produkt kopplad till den, eftersom en beställning kan ha många produkter kan det finnas fler element än beställningar
+  def get_orders_notpayed_full(uid)
+    return grab_db().execute("SELECT orders.*,orders_products.product_id,orders_products.items FROM orders INNER JOIN orders_products ON orders.id=orders_products.order_id WHERE user_id=? AND payed=0", uid)
+  end
+
+
+
+# Få beställningar vars ID finns i en godkänd array
+def get_orders_products_by_ids(ids)
+    return grab_db().execute("SELECT * FROM orders_products WHERE order_id IN(#{ids.join(",")})")
+  end
+  
+  # Få en anpassad struktur inklusive betalda beställningar, ej betalda beställningar och alla produkter som ingår i alla beställningar. Varje beställning har också en lista med ID:n som är kopplade till de produkter den innehåller och som finns i produktdatalistan
+  def get_orders_struct(uid)
+    orders_payed = bykey_get_orders_payed(uid)
+    orders_notpayed = bykey_get_orders_notpayed(uid)
+    orders = {payed:orders_payed, notpayed:orders_notpayed}
+  
+    # Lägg till produktlänkar till beställningar
+    pf = get_orders_payed_full(uid)
+    if pf.length > 0 then
+      pf.each do |order|
+        if not orders_payed[order["id"]]["products"] then
+          orders_payed[order["id"]]["products"] = []
+        end
+        product = {id:order["product_id"],items:order["items"]}
+        orders_payed[order["id"]]["products"].append product
+      end
+    end
+    npf = get_orders_notpayed_full(uid)
+    if npf.length > 0 then
+      npf.each do |order|
+        if not orders_notpayed[order["id"]]["products"] then
+          orders_notpayed[order["id"]]["products"] = []
+        end
+        product = {id:order["product_id"],items:order["items"]}
+        orders_notpayed[order["id"]]["products"].append product
+      end
+    end
+  
+    products = by_key(get_products_linked_orders(uid))
+  
+    return {orders:orders, products:products}
+  end
+  
+  # Ställ in beställningen som betald för en beställning
+  def order_pay(uid, o_id)
+    return grab_db().execute("UPDATE orders SET payed=1 WHERE user_id=? AND id=?", uid, o_id)
+  end
+  
+  get('/orders') do
+    uid = session[:id].to_i
+    orders_and_products = get_orders_struct(uid)
+    slim(:"orders/index", locals:{user:getAnv(), orders:orders_and_products[:orders], products:orders_and_products[:products]})
+  end
+  
+  # Markes an order as payed
+  post('/orders/:id/pay') do
+    uid = session[:id].to_i
+    o_id = params["id"]
+  
+    order_pay(uid, o_id)
+    redirect('/orders')
+  end
+  
+  get('/profile') do 
     db = grab_db()
     usr_id = session[:id].to_i
     prod_id = params["prod_id"]
-    reciept = db.execute("SELECT * FROM order_products WHERE order_id=?", usr_id)
+    reciept = db.execute("SELECT * FROM orders_products WHERE order_id=?", usr_id)
     slim(:"profile/index", locals:{user:getAnv(), profile:reciept})
-
-
-end
+  end
   
 get('/register') do
     slim(:register, locals:{user:getAnv()})
