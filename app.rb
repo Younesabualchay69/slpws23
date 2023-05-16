@@ -44,7 +44,7 @@ get('/products') do
     
 end  
 
-get('/products/:id/') do
+get('/products/:id') do
 id = params[:id]
 db = grab_db()
 product = db.execute("SELECT * FROM products WHERE id = ?",id.to_i).first
